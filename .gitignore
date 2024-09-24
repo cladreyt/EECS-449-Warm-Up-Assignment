@@ -1,3 +1,4 @@
 env
+.DS_Store
 # I figure its a bad idea to store API tokens
 token.txt

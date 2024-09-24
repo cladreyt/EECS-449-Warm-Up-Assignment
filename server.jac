@@ -15,3 +15,25 @@ walker interact_with_body {
         };
     }
 }
+
+walker chris_response {
+    has value: str;
+
+    can return_message with `root entry {
+        report {
+            "chris_response": "Hello, " + self.value + "!",
+            "other_response": "testing"
+        };
+    }
+}
+
+walker add_numbers {
+    has x: int;
+    has y: int;
+
+    can return_message with `root entry {
+        report {
+            "response": self.x + self.y
+        };
+    }
+}
