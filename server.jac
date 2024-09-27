@@ -92,7 +92,8 @@ node SQChat :Chat: {
             agent_role:'role of the agent responding':str,
             context:'retrieved context from documents':list
                 ) -> 'response':str by llm();
-        here.response = respond_with_llm(here.message, here.chat_history, agent_role="You are a conversation agent designed to provide informative summaries about the documents given as context");
+        data = rag_engine.get_from_chroma(query=here.message);
+        here.response = respond_with_llm(here.message, here.chat_history, "You are a conversation agent designed to provide informative summaries about the documents given as context", data);
     }
 }
 

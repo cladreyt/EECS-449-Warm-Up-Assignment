@@ -101,7 +101,8 @@ class SQChat(Chat, _Jac.Node):
 
         def respond_with_llm(message: str, chat_history: list[dict], agent_role: str, context: list) -> str:
             return _Jac.with_llm(file_loc=__file__, model=llm, model_params={}, scope='server(Module).SQChat(node).respond(Ability).respond_with_llm(Ability)', incl_info=[], excl_info=[], inputs=[('current message', str, 'message', message), ('chat history', list[dict], 'chat_history', chat_history), ('role of the agent responding', str, 'agent_role', agent_role), ('retrieved context from documents', list, 'context', context)], outputs=('response', 'str'), action='Respond to message using chat_history as context and agent_role as the goal of the agent', _globals=globals(), _locals=locals())
-        _jac_here_.response = respond_with_llm(_jac_here_.message, _jac_here_.chat_history, agent_role='You are a conversation agent designed to provide informative summaries about the documents given as context')
+        data = rag_engine.get_from_chroma(query=_jac_here_.message)
+        _jac_here_.response = respond_with_llm(_jac_here_.message, _jac_here_.chat_history, 'You are a conversation agent designed to provide informative summaries about the documents given as context', data)
 
 @_Jac.make_node(on_entry=[_Jac.DSFunc('chat', interact)], on_exit=[])
 @__jac_dataclass__(eq=False)

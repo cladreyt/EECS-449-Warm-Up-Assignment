@@ -21,6 +21,39 @@ node Chat {
     has chat_type: ChatType;
 }
 
+walker infer {
+    has message:str;
+    has chat_history: list[dict];
+
+    can init_router with `root entry {
+        visit [-->](`?Router) else {
+            router_node = here ++> Router();
+            router_node ++> RagChat();
+            router_node ++> QAChat();
+            visit router_node;
+        }
+    }
+
+    can route with Router entry {
+        classification = here.classify(message = self.message);
+        visit [-->](`?Chat)(?chat_type==classification);
+    }
+}
+
+walker interact {
+    has message: str;
+    has session_id: str;
+
+    can init_session with `root entry {
+         visit [-->](`?Session)(?id == self.session_id) else {
+            session_node = here ++> Session(id=self.session_id, chat_history=[], status=1);
+            print("Session Node Created");
+
+            visit session_node;
+        }
+    }
+}
+
 node RagChat :Chat: {
     has chat_type: ChatType = ChatType.RAG;
 
@@ -56,29 +89,11 @@ node SQChat :Chat: {
         can 'Respond to message using chat_history as context and agent_role as the goal of the agent'
         respond_with_llm(   message:'current message':str,
             chat_history: 'chat history':list[dict],
-            agent_role:'role of the agent responding':str
+            agent_role:'role of the agent responding':str,
             context:'retrieved context from documents':list
                 ) -> 'response':str by llm();
-        here.response = respond_with_llm(here.message, here.chat_history, agent_role="You are a conversation agent designed to provide informative summaries about the documents given as context");
-    }
-}
-
-walker infer {
-    has message:str;
-    has chat_history: list[dict];
-
-    can init_router with `root entry {
-        visit [-->](`?Router) else {
-            router_node = here ++> Router();
-            router_node ++> RagChat();
-            router_node ++> QAChat();
-            visit router_node;
-        }
-    }
-
-    can route with Router entry {
-        classification = here.classify(message = self.message);
-        visit [-->](`?Chat)(?chat_type==classification);
+        data = rag_engine.get_from_chroma(query=here.message);
+        here.response = respond_with_llm(here.message, here.chat_history, "You are a conversation agent designed to provide informative summaries about the documents given as context", data);
     }
 }
 
@@ -103,19 +118,5 @@ node Session {
         report {
             "response": response.response
         };
-    }
-}
-
-walker interact {
-    has message: str;
-    has session_id: str;
-
-    can init_session with `root entry {
-         visit [-->](`?Session)(?id == self.session_id) else {
-            session_node = here ++> Session(id=self.session_id, chat_history=[], status=1);
-            print("Session Node Created");
-
-            visit session_node;
-        }
     }
 }
